@@ -11,7 +11,8 @@ import (
 func registerEventRoutes(server *gin.Engine) {
 	server.GET("/events", getEvents)
 	server.POST("/events", createEvent)
-	server.GET("/events/:id", getEventById)
+	server.GET("/events/:id", getEventByID)
+	server.PUT("/event/:id", updateEventByID)
 }
 
 func getEvents(c *gin.Context) {
@@ -23,7 +24,7 @@ func getEvents(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": events})
 }
 
-func getEventById(c *gin.Context) {
+func getEventByID(c *gin.Context) {
 	eventID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "bad request id should be a valid integer"})
@@ -51,4 +52,33 @@ func createEvent(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"message": "event created", "event_id": event.ID})
+}
+
+func updateEventByID(c *gin.Context) {
+
+	eventID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "bad request id should be a valid integer"})
+		return
+	}
+	var updatedEvent *models.Event
+	err = c.ShouldBindJSON(&updatedEvent)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	event, err := models.GetEventById(eventID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		return
+	}
+	updatedEvent.ID = event.ID
+	err = updatedEvent.Update()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "event updated successfully"})
+
 }
