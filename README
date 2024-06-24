@@ -1,0 +1,1 @@
+This repository contains the backend implementation for an Event Booking system built as part of a Udemy course on GoLang. The backend leverages the Go programming language and the Gin web framework to provide a robust and scalable solution for managing events and user registrations.
