@@ -8,11 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func registerEventRoutes(server *gin.Engine) {
+func registerEventsRoutes(server *gin.Engine) {
 	server.GET("/events", getEvents)
 	server.POST("/events", createEvent)
 	server.GET("/events/:id", getEventByID)
-	server.PUT("/event/:id", updateEventByID)
+	server.PUT("/events/:id", updateEventByID)
+	server.DELETE("/events/:id", deleteEventByID)
 }
 
 func getEvents(c *gin.Context) {
@@ -81,4 +82,23 @@ func updateEventByID(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "event updated successfully"})
 
+}
+
+func deleteEventByID(c *gin.Context) {
+	eventID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "bad request id should be a valid integer"})
+		return
+	}
+	event, err := models.GetEventById(eventID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		return
+	}
+	err = event.Delete()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "event deleted from the db"})
 }

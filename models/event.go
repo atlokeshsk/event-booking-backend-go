@@ -54,6 +54,19 @@ func (e *Event) Update() error {
 	return err
 }
 
+func (e *Event) Delete() error {
+	query := `
+	DELETE FROM events WHERE id = ?
+`
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(e.ID)
+	return err
+}
+
 func GetAllEvents() ([]Event, error) {
 	query := `SELECT * FROM events`
 	rows, err := db.DB.Query(query)
@@ -61,7 +74,7 @@ func GetAllEvents() ([]Event, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var events []Event
+	var events []Event = []Event{}
 	for rows.Next() {
 		var event Event
 		err = rows.Scan(&event.ID, &event.Name, &event.Description, &event.Location, &event.DateTime, &event.UserID)
