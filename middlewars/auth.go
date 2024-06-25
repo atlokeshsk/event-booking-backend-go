@@ -20,5 +20,6 @@ func Authenticate(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
 		return
 	}
+	c.Set("user_id", userID)
 	c.Next()
 }

@@ -8,14 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func registerEventsRoutes(server *gin.Engine) {
-	server.GET("/events", getEvents)
-	server.POST("/events", createEvent)
-	server.GET("/events/:id", getEventByID)
-	server.PUT("/events/:id", updateEventByID)
-	server.DELETE("/events/:id", deleteEventByID)
-}
-
 func getEvents(c *gin.Context) {
 	events, err := models.GetAllEvents()
 	if err != nil {
@@ -47,6 +39,7 @@ func createEvent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "could not process the response body"})
 		return
 	}
+	userID := c.GetInt64("user_id")
 	event.UserID = userID
 	err = event.Save()
 	if err != nil {
@@ -62,6 +55,17 @@ func updateEventByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "bad request id should be a valid integer"})
 		return
 	}
+
+	event, err := models.GetEventById(eventID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		return
+	}
+	userID := c.GetInt64("user_id")
+	if event.UserID != userID {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "un authorized"})
+		return
+	}
 	var updatedEvent *models.Event
 	err = c.ShouldBindJSON(&updatedEvent)
 	if err != nil {
@@ -69,11 +73,6 @@ func updateEventByID(c *gin.Context) {
 		return
 	}
 
-	event, err := models.GetEventById(eventID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
-		return
-	}
 	updatedEvent.ID = event.ID
 	err = updatedEvent.Update()
 	if err != nil {
@@ -95,10 +94,61 @@ func deleteEventByID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
 		return
 	}
+
+	userID := c.GetInt64("user_id")
+	if event.UserID != userID {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "un authorized"})
+		return
+	}
 	err = event.Delete()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "event deleted from the db"})
+}
+
+func registerForEvent(c *gin.Context) {
+
+	eventID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "bad request id should be a valid integer"})
+		return
+	}
+
+	event, err := models.GetEventById(eventID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		return
+	}
+	userID := c.GetInt64("user_id")
+	err = event.Register(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "unable to register for the event"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "registered for the event successfully"})
+}
+
+func cancelRegistration(c *gin.Context) {
+
+	eventID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "bad request id should be a valid integer"})
+		return
+	}
+
+	event, err := models.GetEventById(eventID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		return
+	}
+	userID := c.GetInt64("user_id")
+	err = event.CancelRegistration(userID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "unable to cancel the registration"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "registration cancelled succesffullty"})
 }

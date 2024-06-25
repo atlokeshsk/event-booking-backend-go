@@ -8,10 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func registerUsersRoutes(server *gin.Engine) {
-	server.POST("/signup", signup)
-	server.POST("/login", login)
-}
 
 func signup(c *gin.Context) {
 	var user models.User
