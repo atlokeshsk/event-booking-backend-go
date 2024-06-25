@@ -47,6 +47,7 @@ func createEvent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "could not process the response body"})
 		return
 	}
+	event.UserID = userID
 	err = event.Save()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "unable to create the event at the moment"})
@@ -56,7 +57,6 @@ func createEvent(c *gin.Context) {
 }
 
 func updateEventByID(c *gin.Context) {
-
 	eventID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "bad request id should be a valid integer"})
