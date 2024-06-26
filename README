@@ -1,1 +1,34 @@
-This repository contains the backend implementation for an Event Booking system built as part of a Udemy course on GoLang. The backend leverages the Go programming language and the Gin web framework to provide a robust and scalable solution for managing events and user registrations.
+This repository contains the backend implementation for an Event Booking system. It is built using the Go programming language and the Gin web framework, providing a robust and scalable solution for managing events and user registrations.
+
+## Features
+- Event creation and management
+- User registration and authentication
+- Booking events
+- Viewing event details
+
+## Technologies Used
+- **GoLang**: The programming language used for backend development.
+- **Gin**: A web framework for building fast and scalable web applications in Go.
+
+## Getting Started
+1. **Clone the repository**:
+    ```sh
+    git clone https://github.com/yourusername/event-booking-system.git
+    cd event-booking-system
+    ```
+
+2. **Install dependencies**:
+    ```sh
+    go mod download
+    ```
+
+3. **Run the application**:
+    ```sh
+    go run main.go
+    ```
+
+## Contributing
+We welcome contributions! Please read our [contributing guidelines](CONTRIBUTING.md) for more details.
+
+## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

@@ -8,15 +8,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// getEvents handles the HTTP request to retrieve all events.
+// @Summary Get all events
+// @Description Fetches all events from the database and returns them in the response.
+// @Tags events
+// @Produce json
+// @Success 200 {object} gin.H{"message": []models.Event}
+// @Failure 500 {object} gin.H{"message": string}
+// @Router /events [get]
 func getEvents(c *gin.Context) {
 	events, err := models.GetAllEvents()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Unable to fetch the events right now"})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": events})
 }
 
+// getEventByID handles the HTTP request to retrieve an event by its ID.
+// @param c *gin.Context - the context of the HTTP request, which includes parameters and other metadata.
+// @return JSON response with the event data if found, or an error message if not found or if the ID is invalid.
 func getEventByID(c *gin.Context) {
 	eventID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -25,18 +36,21 @@ func getEventByID(c *gin.Context) {
 	}
 	event, err := models.GetEventById(eventID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"event": event})
-
 }
 
+// createEvent handles the creation of a new event.
+// It binds the JSON payload to an Event model, sets the user ID from the context,
+// and attempts to save the event to the database. Appropriate JSON responses
+// are returned based on the success or failure of these operations.
 func createEvent(c *gin.Context) {
 	var event models.Event
 	err := c.ShouldBindJSON(&event)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "could not process the response body"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": http.StatusText(http.StatusBadRequest)})
 		return
 	}
 	userID := c.GetInt64("user_id")
@@ -58,7 +72,7 @@ func updateEventByID(c *gin.Context) {
 
 	event, err := models.GetEventById(eventID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"message": "event not present"})
 		return
 	}
 	userID := c.GetInt64("user_id")
@@ -69,14 +83,14 @@ func updateEventByID(c *gin.Context) {
 	var updatedEvent *models.Event
 	err = c.ShouldBindJSON(&updatedEvent)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"message": http.StatusText(http.StatusBadRequest)})
 		return
 	}
 
 	updatedEvent.ID = event.ID
 	err = updatedEvent.Update()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "event updated successfully"})
@@ -91,7 +105,7 @@ func deleteEventByID(c *gin.Context) {
 	}
 	event, err := models.GetEventById(eventID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"message": "Event not present for the id"})
 		return
 	}
 
@@ -102,7 +116,7 @@ func deleteEventByID(c *gin.Context) {
 	}
 	err = event.Delete()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "event deleted from the db"})
@@ -118,7 +132,7 @@ func registerForEvent(c *gin.Context) {
 
 	event, err := models.GetEventById(eventID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"message": "event not present"})
 		return
 	}
 	userID := c.GetInt64("user_id")
@@ -140,7 +154,7 @@ func cancelRegistration(c *gin.Context) {
 
 	event, err := models.GetEventById(eventID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"message": "event not present"})
 		return
 	}
 	userID := c.GetInt64("user_id")

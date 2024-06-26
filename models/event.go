@@ -17,10 +17,12 @@ type Event struct {
 	UserID      int64     `json:"user_id"`
 }
 
+// Save inserts a new event into the database and updates the event's ID with the last inserted ID.
+// It returns an error if any database operation fails.
 func (e *Event) Save() error {
 	query := `INSERT INTO events(name,description,location,datetime,user_id)
-			  VALUES(?,?,?,?,?)
-			  `
+              VALUES(?,?,?,?,?)
+              `
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
 		return err
@@ -67,6 +69,8 @@ func (e *Event) Delete() error {
 	return err
 }
 
+// GetAllEvents retrieves all events from the database.
+// It returns a slice of Event structs and an error if any occurs during the query execution or row scanning.
 func GetAllEvents() ([]Event, error) {
 	query := `SELECT * FROM events`
 	rows, err := db.DB.Query(query)
@@ -74,7 +78,8 @@ func GetAllEvents() ([]Event, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var events []Event = []Event{}
+
+	var events = []Event{}
 	for rows.Next() {
 		var event Event
 		err = rows.Scan(&event.ID, &event.Name, &event.Description, &event.Location, &event.DateTime, &event.UserID)
@@ -86,6 +91,9 @@ func GetAllEvents() ([]Event, error) {
 	return events, nil
 }
 
+// GetEventById retrieves an event from the database by its ID.
+// It returns a pointer to the Event struct and an error if any occurs.
+// If no event is found for the given ID, it returns a custom error message.
 func GetEventById(id int64) (*Event, error) {
 	query := `SELECT * FROM events WHERE id=?`
 	row := db.DB.QueryRow(query, id)
@@ -114,7 +122,7 @@ func (e *Event) Register(userID int64) error {
 	return err
 }
 
-func (e *Event) CancelRegistration(userID int64) error{
+func (e *Event) CancelRegistration(userID int64) error {
 	query := `
 		DELETE FROM registrarions WHERE event_id = ? AND user_id = ?
 	`
